@@ -1,1 +1,1 @@
-"""Tests for homelab MCP server."""
+"""Tests for Proxmox MCP server."""

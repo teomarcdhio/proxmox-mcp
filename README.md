@@ -1,4 +1,4 @@
-# Homelab MCP Server
+# Proxmox MCP Server
 
 A read-only MCP (Model Context Protocol) server that allows LLM agents to interact with your Proxmox homelab VMs.
 
@@ -18,7 +18,7 @@ All operations are **read-only** - your VMs are safe!
 ### 1. Install the package
 
 ```bash
-cd homelab-mcp
+cd proxmox-mcp
 pip install -e .
 ```
 
@@ -44,17 +44,17 @@ cp .env.example .env
 # SSH to your Proxmox server
 pveum user add mcp-reader@pve
 pveum acl modify / -user mcp-reader@pve -role PVEAuditor
-pveum user token add mcp-reader@pve homelab-mcp
+pveum user token add mcp-reader@pve proxmox-mcp
 ```
 
 ### 4. Run the server
 
 ```bash
 # SSE mode (recommended for remote access)
-homelab-mcp --transport sse
+proxmox-mcp --transport sse
 
 # Or stdio mode (for local VS Code/CLI usage)
-homelab-mcp --transport stdio
+proxmox-mcp --transport stdio
 ```
 
 ## Available Tools
@@ -92,7 +92,7 @@ Add to your VS Code `settings.json`:
 ```json
 {
   "mcp.servers": {
-    "homelab": {
+    "proxmox": {
       "url": "http://your-server:8080/mcp/sse"
     }
   }
@@ -106,7 +106,7 @@ Add to `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "homelab": {
+    "proxmox": {
       "url": "http://your-server:8080/mcp/sse"
     }
   }
@@ -120,8 +120,8 @@ For local usage, you can run with stdio transport:
 ```json
 {
   "mcpServers": {
-    "homelab": {
-      "command": "homelab-mcp",
+    "proxmox": {
+      "command": "proxmox-mcp",
       "args": ["--transport", "stdio"]
     }
   }
