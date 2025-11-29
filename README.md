@@ -15,11 +15,10 @@ All operations are **read-only** - your VMs are safe!
 
 ## Quick Start
 
-### 1. Install the package
+### 1. Install UV (if not already installed)
 
 ```bash
-cd proxmox-mcp
-pip install -e .
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
 ### 2. Configure Proxmox credentials
@@ -50,11 +49,20 @@ pveum user token add mcp-reader@pve proxmox-mcp
 ### 4. Run the server
 
 ```bash
+cd proxmox-mcp
+
 # SSE mode (recommended for remote access)
-proxmox-mcp --transport sse
+uv run proxmox-mcp --transport sse
 
 # Or stdio mode (for local VS Code/CLI usage)
-proxmox-mcp --transport stdio
+uv run proxmox-mcp --transport stdio
+```
+
+### Alternative: Install globally with pip
+
+```bash
+pip install -e .
+proxmox-mcp --transport sse
 ```
 
 ## Available Tools
@@ -65,6 +73,7 @@ proxmox-mcp --transport stdio
 | `get_vm_info` | Get detailed VM configuration and specs |
 | `get_vm_status` | Get current runtime status and metrics |
 | `get_vm_metrics` | Get historical performance data |
+| `get_vm_filesystem_info` | Get disk space from inside a VM (requires guest agent) |
 | `list_nodes` | List all Proxmox nodes |
 | `list_vm_snapshots` | List snapshots for a VM |
 | `get_cluster_status` | Get cluster health and totals |
@@ -87,13 +96,13 @@ All settings can be configured via environment variables or a `.env` file:
 
 ### VS Code with GitHub Copilot
 
-Add to your VS Code `settings.json`:
+Add to your VS Code `settings.json` or user `mcp.json`:
 
 ```json
 {
-  "mcp.servers": {
+  "servers": {
     "proxmox": {
-      "url": "http://your-server:8080/mcp/sse"
+      "url": "http://your-server:8080/sse"
     }
   }
 }
@@ -107,7 +116,7 @@ Add to `claude_desktop_config.json`:
 {
   "mcpServers": {
     "proxmox": {
-      "url": "http://your-server:8080/mcp/sse"
+      "url": "http://your-server:8080/sse"
     }
   }
 }
@@ -121,8 +130,13 @@ For local usage, you can run with stdio transport:
 {
   "mcpServers": {
     "proxmox": {
-      "command": "proxmox-mcp",
-      "args": ["--transport", "stdio"]
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory", "/path/to/proxmox-mcp",
+        "proxmox-mcp",
+        "--transport", "stdio"
+      ]
     }
   }
 }
@@ -148,14 +162,16 @@ Once connected, you can ask your LLM:
 ## Development
 
 ```bash
+cd proxmox-mcp
+
 # Install dev dependencies
-pip install -e ".[dev]"
+uv sync --extra dev
 
 # Run tests
-pytest
+uv run pytest
 
 # Lint
-ruff check src/
+uv run ruff check src/
 ```
 
 ## License
