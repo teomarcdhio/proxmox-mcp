@@ -1,4 +1,4 @@
-"""MCP Server with SSE transport for homelab VM management."""
+"""MCP Server with SSE transport for Proxmox VM management."""
 
 import asyncio
 import logging
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 def create_mcp_server() -> FastMCP:
     """Create and configure the MCP server."""
     mcp = FastMCP(
-        name="homelab-mcp",
+        name="proxmox-mcp",
         instructions="""
         This MCP server provides read-only access to a Proxmox homelab environment.
         
@@ -59,13 +59,13 @@ async def run_sse_server():
 
     async def health_check(request):
         """Health check endpoint."""
-        return JSONResponse({"status": "healthy", "service": "homelab-mcp"})
+        return JSONResponse({"status": "healthy", "service": "proxmox-mcp"})
 
     async def sse_endpoint(request):
         """SSE endpoint for MCP communication."""
         async def event_generator():
             # This is a placeholder - actual SSE implementation depends on MCP SDK
-            yield {"event": "connected", "data": "homelab-mcp"}
+            yield {"event": "connected", "data": "proxmox-mcp"}
         
         return EventSourceResponse(event_generator())
 
@@ -104,7 +104,7 @@ def main():
     """Main entry point for the MCP server."""
     import argparse
 
-    parser = argparse.ArgumentParser(description="Homelab MCP Server")
+    parser = argparse.ArgumentParser(description="Proxmox MCP Server")
     parser.add_argument(
         "--transport",
         choices=["stdio", "sse"],

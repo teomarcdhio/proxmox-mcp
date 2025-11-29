@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, patch, MagicMock
 @pytest.fixture
 def mock_settings():
     """Create mock settings for testing."""
-    with patch("homelab_mcp.proxmox_client.settings") as mock:
+    with patch("proxmox_mcp.proxmox_client.settings") as mock:
         mock.proxmox_host = "test-proxmox"
         mock.proxmox_port = 8006
         mock.proxmox_verify_ssl = False
@@ -23,7 +23,7 @@ def mock_settings():
 @pytest.mark.asyncio
 async def test_client_creates_auth_header(mock_settings):
     """Test that the client creates proper auth headers for API token."""
-    from homelab_mcp.proxmox_client import ProxmoxClient
+    from proxmox_mcp.proxmox_client import ProxmoxClient
 
     client = ProxmoxClient()
     headers = client._get_headers()
@@ -35,7 +35,7 @@ async def test_client_creates_auth_header(mock_settings):
 @pytest.mark.asyncio
 async def test_get_all_vms_aggregates_from_nodes(mock_settings):
     """Test that get_all_vms fetches VMs from all nodes."""
-    from homelab_mcp.proxmox_client import ProxmoxClient
+    from proxmox_mcp.proxmox_client import ProxmoxClient
 
     client = ProxmoxClient()
 

@@ -1,4 +1,4 @@
-"""Configuration management for homelab MCP server."""
+"""Configuration management for Proxmox MCP server."""
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
