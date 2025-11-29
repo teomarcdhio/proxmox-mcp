@@ -179,6 +179,13 @@ class ProxmoxClient:
         """Get list of VM snapshots."""
         return await self.get(f"/nodes/{node}/qemu/{vmid}/snapshot")
 
+    async def get_vm_agent_fsinfo(self, node: str, vmid: int) -> list[dict[str, Any]]:
+        """Get filesystem info from QEMU guest agent.
+
+        Requires qemu-guest-agent to be installed and running in the VM.
+        """
+        return await self.get(f"/nodes/{node}/qemu/{vmid}/agent/get-fsinfo")
+
     # =========================================================================
     # Container Operations (LXC)
     # =========================================================================

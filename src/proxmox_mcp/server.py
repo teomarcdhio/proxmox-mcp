@@ -50,36 +50,15 @@ mcp = create_mcp_server()
 
 
 async def run_sse_server():
-    """Run the MCP server with SSE transport."""
-    from starlette.applications import Starlette
-    from starlette.routing import Mount, Route
-    from starlette.responses import JSONResponse
-    from sse_starlette.sse import EventSourceResponse
+    """Run the MCP server with SSE transport using FastMCP's sse_app."""
     import uvicorn
-
-    async def health_check(request):
-        """Health check endpoint."""
-        return JSONResponse({"status": "healthy", "service": "proxmox-mcp"})
-
-    async def sse_endpoint(request):
-        """SSE endpoint for MCP communication."""
-        async def event_generator():
-            # This is a placeholder - actual SSE implementation depends on MCP SDK
-            yield {"event": "connected", "data": "proxmox-mcp"}
-        
-        return EventSourceResponse(event_generator())
-
-    # Create Starlette app with MCP SSE transport
-    app = Starlette(
-        debug=False,
-        routes=[
-            Route("/health", health_check),
-            Route("/sse", sse_endpoint),
-            # Mount the MCP server's SSE handler
-            Mount("/mcp", app=mcp.sse_app()),
-        ],
-    )
-
+    
+    logger.info(f"Starting SSE server on http://{settings.mcp_server_host}:{settings.mcp_server_port}")
+    logger.info(f"MCP SSE endpoint: http://{settings.mcp_server_host}:{settings.mcp_server_port}/sse")
+    
+    # Get the Starlette app from FastMCP
+    app = mcp.sse_app()
+    
     config = uvicorn.Config(
         app,
         host=settings.mcp_server_host,
@@ -87,10 +66,6 @@ async def run_sse_server():
         log_level="info",
     )
     server = uvicorn.Server(config)
-    
-    logger.info(f"Starting SSE server on http://{settings.mcp_server_host}:{settings.mcp_server_port}")
-    logger.info(f"MCP SSE endpoint: http://{settings.mcp_server_host}:{settings.mcp_server_port}/mcp/sse")
-    
     await server.serve()
 
 

@@ -430,3 +430,82 @@ def register_vm_tools(mcp: FastMCP) -> None:
                 "disk_usage_percent": round((used_disk / max(total_disk, 1)) * 100, 2),
             },
         }
+
+    @mcp.tool()
+    async def get_vm_filesystem_info(vmid: int, node: str | None = None) -> dict[str, Any]:
+        """Get filesystem/disk space information from inside a VM using the QEMU guest agent.
+
+        This requires the qemu-guest-agent to be installed and running inside the VM.
+        Install it with: apt install qemu-guest-agent (Debian/Ubuntu) or
+        yum install qemu-guest-agent (RHEL/CentOS)
+
+        Args:
+            vmid: The VM ID
+            node: The Proxmox node name (optional, will auto-detect)
+
+        Returns filesystem information including:
+        - Mount points
+        - Total size
+        - Used space
+        - Free space
+        - Filesystem type
+        """
+        logger.info(f"Getting filesystem info for VM {vmid}")
+
+        # Find node if not provided
+        if node is None:
+            all_vms = await proxmox.get_all_vms()
+            for vm in all_vms:
+                if vm.get("vmid") == vmid:
+                    node = vm.get("node")
+                    break
+
+            if node is None:
+                return {"error": f"VM {vmid} not found"}
+
+        try:
+            fsinfo = await proxmox.get_vm_agent_fsinfo(node, vmid)
+        except Exception as e:
+            error_msg = str(e)
+            if "500" in error_msg or "QEMU guest agent" in error_msg.lower():
+                return {
+                    "error": "QEMU guest agent not available",
+                    "hint": "Install qemu-guest-agent inside the VM: apt install qemu-guest-agent",
+                    "vmid": vmid,
+                    "node": node,
+                }
+            return {"error": f"Failed to get filesystem info: {e}"}
+
+        if not fsinfo:
+            return {
+                "error": "No filesystem info returned",
+                "hint": "QEMU guest agent may not be running or properly configured",
+                "vmid": vmid,
+                "node": node,
+            }
+
+        # Format the filesystem info
+        filesystems = []
+        for fs in fsinfo.get("result", fsinfo) if isinstance(fsinfo, dict) else fsinfo:
+            total_bytes = fs.get("total-bytes", 0)
+            used_bytes = fs.get("used-bytes", 0)
+            free_bytes = total_bytes - used_bytes if total_bytes else 0
+
+            filesystems.append({
+                "mountpoint": fs.get("mountpoint"),
+                "filesystem_type": fs.get("type"),
+                "device": fs.get("name"),
+                "total_bytes": total_bytes,
+                "used_bytes": used_bytes,
+                "free_bytes": free_bytes,
+                "total_gb": round(total_bytes / (1024**3), 2) if total_bytes else 0,
+                "used_gb": round(used_bytes / (1024**3), 2) if used_bytes else 0,
+                "free_gb": round(free_bytes / (1024**3), 2) if free_bytes else 0,
+                "usage_percent": round((used_bytes / total_bytes) * 100, 2) if total_bytes else 0,
+            })
+
+        return {
+            "vmid": vmid,
+            "node": node,
+            "filesystems": filesystems,
+        }
